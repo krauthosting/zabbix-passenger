@@ -1,0 +1,72 @@
+zabbix_export:
+  version: '6.0'
+  date: '2024-10-03T12:56:01Z'
+  groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: 0648982db46545f2b6fe3d7fea118954
+      template: 'Passenger by Zabbix agent'
+      name: 'Passenger by Zabbix agent'
+      description: |
+        Monitor the Passenger application server using the zabbix-passenger helper binary
+        
+        https://github.com/krauthosting/zabbix-passenger
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: b19a2977121d4cd0b0c59d739e40ea63
+          name: 'Number of processes'
+          key: passenger.global_capacity_used
+          delay: '30'
+          history: 14d
+          tags:
+            - tag: Application
+              value: Passenger
+        - uuid: 17dc251bffc543dd9b2c9e42b8946f36
+          name: 'Requests in top-level queue'
+          key: passenger.global_queue
+          delay: '30'
+          tags:
+            - tag: Application
+              value: Passenger
+          triggers:
+            - uuid: 6dd819ad1b7541a09a627fc29ff0be4a
+              expression: 'last(/Passenger by Zabbix agent/passenger.global_queue)>10'
+              name: 'More than 10 requests in global queue on {HOST.NAME}'
+              priority: AVERAGE
+      discovery_rules:
+        - uuid: 1e3ac4d25f024ef2beeeaa8a5151d855
+          name: 'Passenger applications'
+          key: passenger.app_groups
+          delay: '360'
+          item_prototypes:
+            - uuid: b29aab12147e47fdaedf12ad6d84ce65
+              name: 'Number of processes for {#NAME}'
+              key: 'passenger.app_capacity_used[{#UUID}]'
+              delay: '30'
+              history: 14d
+              tags:
+                - tag: Application
+                  value: Passenger
+            - uuid: a4359805a5ff44348088a34673a0e775
+              name: 'Requests in queue for {#NAME}'
+              key: 'passenger.app_queue[{#UUID}]'
+              delay: '30'
+              history: 14d
+              tags:
+                - tag: Application
+                  value: Passenger
+              trigger_prototypes:
+                - uuid: 148899559e1b4725872e8593703d14bd
+                  expression: 'last(/Passenger by Zabbix agent/passenger.app_queue[{#UUID}])>5'
+                  name: 'More than 5 requests in queue for {#NAME}'
+                  priority: HIGH
+            - uuid: 1b6bba1a2043409fbf5909939fd9aeb3
+              name: 'Number of sessions for {#NAME}'
+              key: 'passenger.sessions[{#UUID}]'
+              delay: '30'
+              history: 14d
+              tags:
+                - tag: Application
+                  value: Passenger
